@@ -1,0 +1,9 @@
+{
+    "go": {
+        // package "syscall/js" is only supported by js, wasm
+        "toolsEnvVars": {
+            "GOOS": "js",
+            "GOARCH": "wasm",
+        },
+    }
+}
