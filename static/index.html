@@ -15,6 +15,50 @@
 				}
 			}
 
+			rawfetch = fetch
+			fetch = async function (...args) {
+				if (args[0] === 'greet') {
+					path = args[0]
+					req = args[1]
+					console.log(req)
+
+					r = req.body.getReader()
+					await r.read().then(({done, value}) => {
+						console.log(done)
+						console.log(value)
+						data = value
+						req.body = data
+						req.duplex = undefined
+					})
+					return rawfetch(path, req)
+				} else {
+					return rawfetch(...args)
+				}
+			}
+
+			makeStream = function() {
+				rargs =	new Object()
+				rargs.type = "bytes"
+				rargs.autoAllocateChunkSize = 2048
+				rargs.pull = function(...args) {
+					controller = args[0]
+					byobr = controller.byobRequest
+					if (byobr == null) {
+						controller.close()
+					}
+
+					byobrv = byobr.view
+
+					bytes = new Uint8Array(byobrv.buffer)
+					bytes = [100,117,109,109,121]
+
+					byobr.respond(5)
+					controller.close()
+				}
+				rs = new ReadableStream(rargs)
+				return rs
+			}
+
 			const go = new Go();
 			let mod, inst;
 			WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject)
